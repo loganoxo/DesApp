@@ -15,6 +15,7 @@ import com.logan.component.RoundButton;
 
 /**
  * swing启动类
+ *
  * @author logan
  * @version 1.0
  */
@@ -201,8 +202,8 @@ public class DesApp extends JFrame {
         this.pack(); // 根据组件的大小自动调整窗口大小
         // 获取屏幕尺寸
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int screenWidth = (int)screenSize.getWidth();
-        int screenHeight = (int)screenSize.getHeight();
+        int screenWidth = (int) screenSize.getWidth();
+        int screenHeight = (int) screenSize.getHeight();
         int windowWidth = this.getWidth();
         int windowHeight = this.getHeight();
 
@@ -217,10 +218,10 @@ public class DesApp extends JFrame {
 
     /**
      * 校验
-     * 
+     *
      * @param content 输入内容不能为空
-     * @param key 密钥为24位
-     * @param iv 偏移量为8位
+     * @param key     密钥为24位
+     * @param iv      偏移量为8位
      * @return 布尔值
      */
     private boolean check(String content, String key, String iv) {

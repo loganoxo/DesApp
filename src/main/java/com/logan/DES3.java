@@ -20,9 +20,9 @@ public class DES3 {
     /**
      * CBC加密
      *
-     * @param key 密钥
+     * @param key   密钥
      * @param keyiv IV
-     * @param data 明文
+     * @param data  明文
      * @return Base64编码的密文
      * @throws Exception
      */
@@ -43,9 +43,9 @@ public class DES3 {
     /**
      * CBC解密
      *
-     * @param key 密钥
+     * @param key   密钥
      * @param keyiv IV
-     * @param data Base64编码的密文
+     * @param data  Base64编码的密文
      * @return 明文
      * @throws Exception
      */
