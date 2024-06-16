@@ -41,10 +41,21 @@ jobs:
             -   name: Create release jar
                 run: cp target/jar/*.jar DesApp.jar
 
+            -   name: Create GitHub Release
+                id: create_release
+                uses: actions/create-release@v1
+                with:
+                    tag_name: ${{ github.ref }}
+                    release_name: Release ${{ github.ref }}
+                    draft: false
+                    prerelease: false
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
             -   name: Upload jar to GitHub Release
                 uses: actions/upload-release-asset@v1
                 with:
-                    upload_url: ${{ github.event.release.upload_url }}
+                    upload_url: ${{ steps.create_release.outputs.upload_url }}
                     asset_path: DesApp.jar
                     asset_name: DesApp.jar
                     asset_content_type: application/java-archive
@@ -95,7 +106,9 @@ jobs:
             -   name: Upload DMG to GitHub Release
                 uses: actions/upload-release-asset@v1
                 with:
-                    upload_url: ${{ github.event.release.upload_url }}
+                    upload_url: ${{ needs.build.outputs.upload_url }}
                     asset_path: output/DesApp-${{ matrix.arch }}.dmg
                     asset_name: DesApp-${{ matrix.arch }}.dmg
                     asset_content_type: application/x-apple-diskimage
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
