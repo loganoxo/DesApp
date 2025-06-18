@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'  # 如 v1.0.0 时触发
 
+permissions:
+  contents: write  # ⬅️ 加上这句，授权创建 Release
+
 jobs:
   build-dmg:
     runs-on: macos-15  # Apple Silicon
