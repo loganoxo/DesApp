@@ -56,3 +56,9 @@ jobs:
         with:
           name: DesApp-dmg
           path: out/DesApp-*.dmg
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: out/DesApp-*.dmg
