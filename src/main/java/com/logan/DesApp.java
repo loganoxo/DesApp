@@ -20,6 +20,9 @@ import com.logan.component.RoundButton;
  * @version 1.0
  */
 public class DesApp extends JFrame {
+
+    private final Font font = new Font("Arial", Font.PLAIN, 18);
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
@@ -27,51 +30,55 @@ public class DesApp extends JFrame {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            DesApp demo = new DesApp();
-            demo.setVisible(true);
+            DesApp app = new DesApp();
+            app.setVisible(true);
         });
     }
 
-    /**
-     * 包含组件的面板
-     */
-    private final JPanel panel;
-
-    /**
-     * 网格布局
-     */
-    private final GridBagConstraints constraints;
-
-    /**
-     * 字体
-     */
-    private final Font font = new Font("Arial", Font.PLAIN, 18);
-
-    // 创建主窗口
     private DesApp() {
         this.setTitle("3DES加解密");
         // this.setSize(1800, 600); //调用pack()根据组件的大小自动调整窗口大小
-        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // 防止默认关闭操作
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);// 防止默认关闭操作
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 handleWindowClosing();
             }
         });
-        panel = new JPanel(new GridBagLayout()); // 创建包含组件的面板
-        constraints = new GridBagConstraints(); // 网格布局
-        constraints.insets = new Insets(5, 5, 5, 5);
 
-        // 输入要加解密的内容
-        JLabel contentLabel = createLabel("输入内容:"); // 创建标签
-        addComponent(contentLabel, 0, 0, null, GridBagConstraints.WEST, false);
-        JTextArea contentTextArea = createTextArea(4, 70); // 创建文本区域
-        addComponent(new JScrollPane(contentTextArea), 1, 0, 3, GridBagConstraints.WEST, false);
+        // 输入文本框
+        JPanel contentPanel = new JPanel(new BorderLayout());//边界布局
+        JLabel contentLabel = createLabel("输入内容:");
+        JTextArea contentTextArea = createTextArea(15, 80); // 输入框
+        contentPanel.add(contentLabel, BorderLayout.NORTH);
+        contentPanel.add(new JScrollPane(contentTextArea), BorderLayout.CENTER);
 
-        // 输入密钥和偏移量
-        JLabel keyLabel = createLabel("密钥(24位):"); // 创建标签
-        addComponent(keyLabel, 0, 1, null, GridBagConstraints.WEST, false);
-        JPasswordField keyField = createPasswordField(30);
+
+        // 输出文本框
+        JPanel resultPanel = new JPanel(new BorderLayout());
+        JLabel resultLabel = createLabel("输出内容:");
+        JTextArea resultTextArea = createTextArea(15, 80); // 结果框
+        resultTextArea.setEditable(false);
+        resultPanel.add(resultLabel, BorderLayout.NORTH);
+        resultPanel.add(new JScrollPane(resultTextArea), BorderLayout.CENTER);
+
+        // 上半部分：两个文本框
+        JSplitPane textAreaSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, contentPanel, resultPanel);
+        textAreaSplit.setResizeWeight(0.5);    // 平等拉伸
+        textAreaSplit.setContinuousLayout(true);
+
+        // 密钥、偏移量、按钮区域
+        JPanel formPanel = new JPanel(new GridBagLayout());// 网格布局
+        JPanel formWrapper = new JPanel(new BorderLayout());
+        formWrapper.add(formPanel, BorderLayout.NORTH);
+        formWrapper.setPreferredSize(new Dimension(0, 80));
+        formWrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+        formWrapper.setMinimumSize(new Dimension(0, 80));
+
+        JLabel keyLabel = createLabel("密钥(24位):");
+        formPanel.add(keyLabel, createGbc(0, 0, 0, GridBagConstraints.NONE, 1, new Insets(0, 2, 0, 5)));
+        JPasswordField keyField = createPasswordField(24);
+        formPanel.add(keyField, createGbc(1, 0, 3, GridBagConstraints.HORIZONTAL, 1, new Insets(0, 0, 0, 30)));
         // 输入字符数回显
         keyField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -90,16 +97,14 @@ public class DesApp extends JFrame {
             }
 
             private void updateCount() {
-                int count = keyField.getPassword().length;
-                keyLabel.setText("密钥(" + count + "/24位):");
+                keyLabel.setText("密钥(" + keyField.getPassword().length + "/24位):");
             }
         });
-        addComponent(keyField, 1, 1, null, GridBagConstraints.WEST, false);
 
-        JLabel ivLabel = createLabel("偏移量(8位):"); // 创建标签
-        addComponent(ivLabel, 2, 1, null, GridBagConstraints.WEST, false);
-        JPasswordField ivField = createPasswordField(30);
-        // 输入字符数回显
+        JLabel ivLabel = createLabel("偏移量(8位):");
+        formPanel.add(ivLabel, createGbc(2, 0, 0, GridBagConstraints.NONE, 1, new Insets(0, 0, 0, 5)));
+        JPasswordField ivField = createPasswordField(8);
+        formPanel.add(ivField, createGbc(3, 0, 1, GridBagConstraints.HORIZONTAL, 1, new Insets(0, 0, 0, 0)));
         ivField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -117,103 +122,85 @@ public class DesApp extends JFrame {
             }
 
             private void updateCount() {
-                int count = ivField.getPassword().length;
-                ivLabel.setText("偏移量(" + count + "/8位):");
+                ivLabel.setText("偏移量(" + ivField.getPassword().length + "/8位):");
             }
         });
-        addComponent(ivField, 3, 1, null, GridBagConstraints.WEST, false);
 
-        // 创建加解密按钮
-        JButton encodeButton = crecateButton("3DES加密", 20); // 创建自定义样式的按钮
-        addComponent(encodeButton, 0, 2, null, GridBagConstraints.WEST, false);
-        JButton decodeButton = crecateButton("3DES解密", 20); // 创建自定义样式的按钮
-        addComponent(decodeButton, 1, 2, null, GridBagConstraints.WEST, false);
-
-        // 创建返回结果
-        JTextArea resultTextArea = createTextArea(10, 80); // 创建文本区域
-        resultTextArea.setEditable(false); // 设置为不可编辑
-        addComponent(new JScrollPane(resultTextArea), 0, 3, null, GridBagConstraints.CENTER, true);
-
-        // 复制按钮
-        JButton copyButton = crecateButton("复制结果", 20); // 创建自定义样式的按钮
-        addComponent(copyButton, 0, 4, null, GridBagConstraints.CENTER, true);
-
-        // 备注
-        JLabel remarkLabel = createLabel("3DES加解密，使用 Cipher Block Chaining (CBC) 模式，并且采用 PKCS5 填充方式"); // 创建标签
+        // 创建按钮
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        JButton encodeButton = crecateButton("3DES加密", 20);
+        JButton decodeButton = crecateButton("3DES解密", 20);
+        JButton copyButton = crecateButton("复制结果", 20);
+        JLabel remarkLabel = createLabel("3DES加解密，使用 CBC 模式 + PKCS5 填充");
         remarkLabel.setFont(font);
-        addComponent(remarkLabel, 0, 5, null, GridBagConstraints.WEST, true);
+        buttonPanel.add(encodeButton);
+        buttonPanel.add(decodeButton);
+        buttonPanel.add(copyButton);
+        buttonPanel.add(remarkLabel);
+        formPanel.add(buttonPanel, createGbc(0, 1, 0, GridBagConstraints.NONE, GridBagConstraints.REMAINDER, new Insets(0, 0, 0, 0)));
 
-        // 加密
+        // 主区域
+        JSplitPane mainSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, textAreaSplit, formPanel);
+        mainSplit.setResizeWeight(1);
+        mainSplit.setContinuousLayout(true);
+
+        // 将面板添加到主窗口
+        this.setContentPane(mainSplit);
+        // 根据组件的大小自动调整窗口大小
+        this.pack();
+        //将当前窗口置于屏幕中央
+        this.setLocationRelativeTo(null);
+        // 显示窗口
+        this.setVisible(true);
+
+        // 加密按钮事件
         encodeButton.addActionListener(e -> {
             String content = contentTextArea.getText();
             String key = new String(keyField.getPassword());
             String iv = new String(ivField.getPassword());
-            boolean flag = check(content, key, iv);
-
-            if (flag) {
+            if (check(content, key, iv)) {
                 try {
-                    String result = DES3.encodeCBC(key.getBytes(StandardCharsets.UTF_8),
-                        iv.getBytes(StandardCharsets.UTF_8), content.getBytes(StandardCharsets.UTF_8));
-                    resultTextArea.setText(result); // 将连接结果显示在文本区域中
+                    String result = DES3.encodeCBC(
+                        key.getBytes(StandardCharsets.UTF_8),
+                        iv.getBytes(StandardCharsets.UTF_8),
+                        content.getBytes(StandardCharsets.UTF_8));
+                    resultTextArea.setText(result);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, "加密失败：" + ex.getMessage(), "抛出异常", JOptionPane.ERROR_MESSAGE);
-                    throw new RuntimeException(ex);
+                    JOptionPane.showMessageDialog(this, "加密失败：" + ex.getMessage(), "异常", JOptionPane.ERROR_MESSAGE);
                 }
-
             }
         });
 
-        // 解密
+        // 解密按钮事件
         decodeButton.addActionListener(e -> {
             String content = contentTextArea.getText();
             String key = new String(keyField.getPassword());
             String iv = new String(ivField.getPassword());
-            boolean flag = check(content, key, iv);
-            if (flag) {
+            if (check(content, key, iv)) {
                 try {
-                    String result = DES3.decodeCBC(key.getBytes(StandardCharsets.UTF_8),
-                        iv.getBytes(StandardCharsets.UTF_8), content.getBytes(StandardCharsets.UTF_8));
-                    resultTextArea.setText(result); // 将连接结果显示在文本区域中
+                    String result = DES3.decodeCBC(
+                        key.getBytes(StandardCharsets.UTF_8),
+                        iv.getBytes(StandardCharsets.UTF_8),
+                        content.getBytes(StandardCharsets.UTF_8));
+                    resultTextArea.setText(result);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, "解密失败：" + ex.getMessage(), "抛出异常", JOptionPane.ERROR_MESSAGE);
-                    throw new RuntimeException(ex);
+                    JOptionPane.showMessageDialog(this, "解密失败：" + ex.getMessage(), "异常", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
 
-        // 复制
+        // 复制按钮事件
         copyButton.addActionListener(e -> {
             String result = resultTextArea.getText();
-            try {
-                if (result == null || result.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "结果为空");
-                } else {
-                    StringSelection selection = new StringSelection(result);
-                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                    clipboard.setContents(selection, null); // 复制结果到剪贴板
-                    JOptionPane.showMessageDialog(this, "结果已复制到剪贴板。");
-                }
-            } catch (SecurityException ex) {
-                JOptionPane.showMessageDialog(this, "复制到剪贴板失败：" + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+            if (result == null || result.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "结果为空");
+            } else {
+                StringSelection selection = new StringSelection(result);
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(selection, null);
+                JOptionPane.showMessageDialog(this, "结果已复制到剪贴板。");
             }
         });
-
-        this.add(panel); // 将面板添加到主窗口
-        this.pack(); // 根据组件的大小自动调整窗口大小
-        // 获取屏幕尺寸
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int screenWidth = (int) screenSize.getWidth();
-        int screenHeight = (int) screenSize.getHeight();
-        int windowWidth = this.getWidth();
-        int windowHeight = this.getHeight();
-
-        // 计算窗口位置
-        int x = (screenWidth - windowWidth) / 2;
-        int y = (screenHeight - windowHeight) / 2;
-
-        // 设置窗口位置
-        this.setLocation(x, y);
-        this.setVisible(true); // 显示窗口
     }
 
     /**
@@ -225,40 +212,70 @@ public class DesApp extends JFrame {
      * @return 布尔值
      */
     private boolean check(String content, String key, String iv) {
-        boolean flag = true;
         if (content == null || content.isEmpty()) {
-            flag = false;
             JOptionPane.showMessageDialog(this, "内容不能为空", "校验错误", JOptionPane.ERROR_MESSAGE);
-        } else if (key == null || key.isEmpty()) {
-            flag = false;
-            JOptionPane.showMessageDialog(this, "密钥不能为空", "校验错误", JOptionPane.ERROR_MESSAGE);
-        } else if (iv == null || iv.isEmpty()) {
-            flag = false;
-            JOptionPane.showMessageDialog(this, "偏移量不能为空", "校验错误", JOptionPane.ERROR_MESSAGE);
-        } else if (key.length() != 24 || iv.length() != 8) {
-            JOptionPane.showMessageDialog(this, "密钥或偏移量长度不对", "校验错误", JOptionPane.ERROR_MESSAGE);
-            flag = false;
+            return false;
         }
-        return flag;
+        if (key == null || key.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "密钥不能为空", "校验错误", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        if (iv == null || iv.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "偏移量不能为空", "校验错误", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        if (key.length() != 24 || iv.length() != 8) {
+            JOptionPane.showMessageDialog(this, "密钥或偏移量长度不对", "校验错误", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        return true;
     }
 
-    // 将组件添加到面板的辅助方法
-    private void addComponent(JComponent component, int x, int y, Integer gridwidth, Integer anchor, boolean allLine) {
-        constraints.gridwidth = 1;
-        constraints.gridx = x;
-        constraints.gridy = y;
-        constraints.anchor = GridBagConstraints.CENTER; // 居中对齐
-        if (gridwidth != null) {
-            constraints.gridwidth = gridwidth;
-        }
-        if (anchor != null) {
-            constraints.anchor = anchor; // 对齐
-        }
-        if (allLine) {
-            constraints.gridwidth = GridBagConstraints.REMAINDER; // REMAINDER 表示横跨整行
-        }
+    /**
+     * 创建并配置 GridBagConstraints 实例，便于复用和统一管理属性
+     *
+     * @param gridx   所在列
+     * @param gridy   所在行
+     * @param weightx 水平方向权重
+     * @param fill    填充模式，如 GridBagConstraints.NONE / HORIZONTAL
+     * @param insets  四周边距
+     * @return 配置好的 GridBagConstraints 对象
+     */
+    private GridBagConstraints createGbc(int gridx, int gridy, double weightx, int fill, int gridWidth, Insets insets) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = gridx;           // 设置列索引
+        gbc.gridy = gridy;           // 设置行索引
+        gbc.weightx = weightx;       // 水平方向占比
+        gbc.weighty = 0;             // 竖直方向不扩展
+        gbc.fill = fill;             // 填充策略
+        gbc.anchor = GridBagConstraints.WEST; // 锚点靠左
+        gbc.insets = insets;         // 边距
+        gbc.gridwidth = gridWidth;   //占据几列
+        return gbc;
+    }
 
-        panel.add(component, constraints);
+    // 创建文本框的辅助方法
+    private JTextArea createTextArea(int rows, int columns) {
+        JTextArea textArea = new JTextArea(rows, columns);
+        textArea.setFont(font);
+        textArea.setForeground(Color.BLACK); // 设置文本颜色
+        textArea.setBackground(Color.WHITE); // 设置背景颜色
+        textArea.setLineWrap(true); // 启用自动换行
+        textArea.setCaretColor(Color.BLACK); // 设置光标颜色
+        textArea.setMargin(new Insets(10, 10, 10, 10)); // 设置边距
+        textArea.setBorder(BorderFactory.createLineBorder(Color.GRAY)); // 设置边框
+        return textArea;
+    }
+
+    // 创建密码输入框的辅助方法
+    private JPasswordField createPasswordField(int columns) {
+        JPasswordField passwordField = new JPasswordField(columns);
+        passwordField.setFont(font); // 设置字体
+        passwordField.setForeground(Color.BLACK); // 设置文本颜色
+        passwordField.setBackground(Color.WHITE); // 设置背景颜色
+        passwordField.setCaretColor(Color.BLACK); // 设置光标颜色
+        passwordField.setBorder(BorderFactory.createLineBorder(Color.GRAY));// 设置边框
+        return passwordField;
     }
 
     // 创建标签
@@ -269,31 +286,6 @@ public class DesApp extends JFrame {
         label.setBackground(Color.WHITE); // 设置背景颜色
         // label.setBorder(BorderFactory.createLineBorder(Color.GRAY)); // 设置边框
         return label;
-    }
-
-    // 创建文本输入框的辅助方法
-    private JPasswordField createPasswordField(int columns) {
-        JPasswordField passwordField = new JPasswordField(columns);
-        passwordField.setFont(font); // 设置字体
-        passwordField.setForeground(Color.BLACK); // 设置文本颜色
-        passwordField.setBackground(Color.WHITE); // 设置背景颜色
-        passwordField.setCaretColor(Color.BLACK); // 设置光标颜色
-        passwordField.setMargin(new Insets(10, 10, 10, 10)); // 设置边距
-        passwordField.setBorder(BorderFactory.createLineBorder(Color.GRAY)); // 设置边框
-        return passwordField;
-    }
-
-    // 创建文本区域的辅助方法
-    private JTextArea createTextArea(int rows, int columns) {
-        JTextArea textArea = new JTextArea(rows, columns);
-        textArea.setFont(new Font("Arial", Font.PLAIN, 18)); // 设置字体
-        textArea.setForeground(Color.BLACK); // 设置文本颜色
-        textArea.setBackground(Color.WHITE); // 设置背景颜色
-        textArea.setLineWrap(true); // 启用自动换行
-        textArea.setCaretColor(Color.BLACK); // 设置光标颜色
-        textArea.setMargin(new Insets(10, 10, 10, 10)); // 设置边距
-        textArea.setBorder(BorderFactory.createLineBorder(Color.GRAY)); // 设置边框
-        return textArea;
     }
 
     // 创建带有自定义样式的按钮的辅助方法
