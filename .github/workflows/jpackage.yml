@@ -65,3 +65,11 @@ jobs:
         if: github.ref_type == 'tag'
         with:
           files: out/DesApp-*.dmg
+          body: |
+            ⚠️ **首次运行前请执行以下命令, 解除 macOS 限制：**
+
+            ```bash
+            xattr -d com.apple.quarantine ~/Applications/DesApp.app
+            ```
+
+            否则系统可能会提示「应用已损坏，无法打开」。
