@@ -34,8 +34,13 @@ trim_trailing_whitespace = false
 # 对 package.json 生效
 [package.json]
 indent_size = 2 # 使用2个空格缩进
+tab_width = 2
 
 # 对 gitconfig 生效
 [{gitconfig,gitconfig-linux,gitconfig-mac,gitconfig-win}]
 indent_style = tab
 trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2
+tab_width = 2

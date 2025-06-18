@@ -1,0 +1,53 @@
+name: Build macOS DMG
+
+on:
+  push:
+    tags:
+      - 'v*'  # 如 v1.0.0 时触发
+
+jobs:
+  build-dmg:
+    runs-on: macos-15  # Apple Silicon
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: '17'  # jpackage 需要 JDK 14+
+
+      - name: Build JAR with Maven
+        run: mvn clean package
+
+      - name: Locate artifact
+        id: artifact
+        run: |
+          JAR=$(find target -name "*.jar" | grep -v "sources" | grep -v "javadoc" | head -n1)
+          echo "jar=$JAR" >> $GITHUB_OUTPUT
+
+      - name: Confirm icon exists
+        run: ls -l assets/icon.icns
+
+      - name: Package .dmg with jpackage
+        run: |
+          mkdir -p out
+          jpackage \
+            --type dmg \
+            --name DesApp \
+            --input target \
+            --main-jar ${{ steps.artifact.outputs.jar }} \
+            --main-class com.logan.DesApp \
+            --icon assets/icon.icns \
+            --java-options "-Xmx512m" \
+            --dest out \
+            --app-version "${{ github.ref_name }}" \
+            --mac-package-identifier com.logan.desapp
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: DesApp-dmg
+          path: out/DesApp-*.dmg
