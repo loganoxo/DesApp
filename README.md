@@ -9,7 +9,7 @@
 
 
 
-> 打包jar, jdk版本>=1.8
+> 手动打包jar, jdk版本>=1.8
 >
 > 打包成macos的应用app(dmg), 需要用到jdk版本14以后自带的`jpackage`
 
@@ -23,3 +23,8 @@ jpackage  --input ./jar  --name DesApp --main-jar DesApp-1.0.jar --main-class co
 ![c](assets/c.png)
 
 
+**注意:**
+执行app前,需要先执行:
+```shell
+xattr -d com.apple.quarantine xxx/DesApp.app
+```
